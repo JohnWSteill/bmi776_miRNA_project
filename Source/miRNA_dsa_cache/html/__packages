@@ -1,0 +1,13 @@
+base
+tufte
+ggplot2
+tidyverse
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+reshape2
+bindrcpp

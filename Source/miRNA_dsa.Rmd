@@ -1,0 +1,162 @@
+---
+title: "Sub_0645: miRNA Normalization "
+subtitle: "Sensitivity to PCR bias and dilution"
+author: "John Steill"
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_html: default
+bibliography: skeleton.bib
+link-citations: yes
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'h')
+```
+```{r setup, include=FALSE}
+library(tufte)
+library(tidyverse)
+library(reshape2)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+```
+
+# Introduction
+
+There are two goals for this analysis:
+
+1. To evaluate the effect of rna concentration and pcr on expression estimation 
+1. Create normalization method:
+    + C. Elegans spike-in
+    + CPM vs tam_UQ 
+
+Unfortunately, the spike-in method failed. No reads were produced. 
+
+In evaluating the noise induced by lower concentrations and pcr amplification, we are mostly concerned with the abundances of the most prevalent miRNAs. We are interested in when the values are distorted to the extent that their ranks change. For this question, choice of normalization method won't matter: whether we divide by sum()/1e6 (cpm) or by a given quantile value, the ranks will be unaffected.
+
+However, this data should provide insights into the best normalization method. As the base sample is the same for each trial, all differentially expressed miRNAs will be false positives. Thus we may want to minimize the FDR by choosing the method with the fewest DE miRNAs.
+
+\pagebreak
+
+# Raw Counts
+
+```{r, include=FALSE}
+
+
+get_data <- function(f){
+    
+    raw <- read_tsv(f)
+    raw = raw %>% rename(
+        miRNA="#symbol",
+        ng_3_13 = 'Hepg2_with_UO126_reps_1&2_3_13ng',
+        ng_6_25= 'Hepg2_with_UO126_reps_1&2_6_25ng',
+        ng_12_5 = 'Hepg2_with_UO126_reps_1&2_12_5ng',
+        ng_25 = 'Hepg2_with_UO126_reps_1&2_25ng',
+        ng_50 = 'Hepg2_with_UO126_reps_1&2_50ng',
+        ng_100 = 'Hepg2_with_UO126_reps_1&2_100ng',
+        ng_200 = 'Hepg2_with_UO126_reps_1&2_200ng',
+        ng_500 = 'Hepg2_with_UO126_reps_1&2_500ng',
+        cyc_5 = 'Hepg2_with_UO126_reps_1&2_5_cycles',
+        cyc_10 = 'Hepg2_with_UO126_reps_1&2_10_cycles',
+        cyc_15 = 'Hepg2_with_UO126_reps_1&2_15_cycles',
+        cyc_20 = 'Hepg2_with_UO126_reps_1&2_20_cycles',
+        cyc_25 = 'Hepg2_with_UO126_reps_1&2_25_cycles',
+        cyc_30 = 'Hepg2_with_UO126_reps_1&2_30_cycles',
+        dil_1to2 = 'Hepg2_with_UO126_reps_1&2_SI_1to2_dil',
+        dil_1to3_9 = 'Hepg2_with_UO126_reps_1&2_SI_1to3_9_dil',
+        dil_1to7_8 = 'Hepg2_with_UO126_reps_1&2_SI_1to7_8_dil',
+        dil_1to15_6 = 'Hepg2_with_UO126_reps_1&2_SI_1to15_6_dil',
+        dil_1to31_2 = 'Hepg2_with_UO126_reps_1&2_SI_1to31_2_dil',
+        dil_1to62_5 = 'Hepg2_with_UO126_reps_1&2_SI_1to62_5_dil',
+        dil_1to125 = 'Hepg2_with_UO126_reps_1&2_SI_1to125_dil',
+        dil_1to250 = 'Hepg2_with_UO126_reps_1&2_SI_1to250_dil',
+        dil_1to500 = 'Hepg2_with_UO126_reps_1&2_SI_1to500_dil',
+        dil_1to1000 = 'Hepg2_with_UO126_reps_1&2_SI_1to1000_dil'
+    ) %>% select(
+        miRNA, ng_3_13, ng_6_25, ng_12_5, ng_25, ng_50 , ng_100, ng_200,ng_500,
+        cyc_5, cyc_10, cyc_15, cyc_20, cyc_25, cyc_30,
+        dil_1to2, dil_1to3_9, dil_1to7_8, dil_1to15_6, dil_1to31_2, dil_1to62_5,
+        dil_1to125, dil_1to250, dil_1to500, dil_1to1000
+    )
+    raw$rowSum = rowSums(raw[,2:25])
+    raw <- arrange(raw,desc(rowSum))[,1:25]
+}
+
+
+get_melt <- function(f){
+    m = melt(get_data(f)[1:10,])  
+}
+
+
+```
+
+```{r fig-raw, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE, fig.cap = "Raw Reads", message = F, warning=FALSE, echo =F, cache=TRUE}
+setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+
+ggplot(get_melt("data/miRNA.ec.tab"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+We see some trends: 
+
+* Fewer total counts as the initial concentration drops 
+* Fewer total counts with lower cycle counts (saturating at ~15) 
+* Robust total counts in the dilution sequence, although the 1:15.6 appears to be an outlier.
+
+\pagebreak
+
+# CPM Normalized Counts
+
+```{r fig-cpm, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE, fig.cap = "CPM", message = F, warning=FALSE, echo =F, cache=TRUE}
+setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+ggplot(get_melt("data/cpm_norm.tsv"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+What I find interesting here is that the relative rank of two species, 148a-3p & 151a-3p vary quite a bit in the range of supposed stability: 100-500ng and dilutions of 7.8 through 31.2. Are there two outliers?
+
+\pagebreak
+
+# Tam_UQ Normalized Counts
+```{r fig-tam, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE, fig.cap = "Tam UQ", message = F, warning=FALSE, echo =F, cache=TRUE}
+setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+ggplot(get_melt("data/tam_UQ.tsv"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+The function of upper quantile normalization is shown by the smoothing of the highest counts. 
+\pagebreak
+
+# Required Amount Analysis: Spearman Correlation
+
+It satisfies common sense that the very highest expressed miRNAs will be relatively unaffected by initial concentration.By doing a spearman correlation, we can examine the sensitivity of species which are express at lower levels. 
+
+<!-- #```{r fig-spear, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE,  message = F, warning=FALSE, echo =F, -->
+
+```{r fig-spear, fig.cap = "Tam UQ Spearman Correlation; 400 top miRNA", fig.width=6, fig.height=6,  message = F, cache=TRUE, warning=FALSE, echo=F}
+setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+library(corrplot)
+uq_df_ng = select(get_data("data/tam_UQ.tsv"),contains("ng"))
+corrplot.mixed(cor(uq_df_ng[0:400,],method='spearman'), tl.pos = 'lt', lower.col = "black", number.cex = .9, order="hclust")
+```
+
+<!-- This very flat distribution is caused by the many zeros of the DF. By restricting to the top 400 expressed miRNAs: -->
+<!-- ```{r fig-spear4, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE, fig.cap = "Tam UQ Spearman Correlation; 400 miRNA", message = F, warning=FALSE, echo =F, cache=TRUE} -->
+<!-- setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm") -->
+
+<!-- uq_df_ng = select(get_data("data/tam_UQ.tsv"),contains("ng")) -->
+<!-- corrplot.mixed(cor(uq_df_ng[0:400,],method='spearman'), lower.col = "black", number.cex = .7, order="hclust") -->
+<!-- ``` -->
+
+
+# TO-DO
+
+1. Normalization Analysis
+    + Choose a region of interest (avoid outlying conditions, omit outliers?)
+    + Choose a DE algorithm
+    + Investigate which normalization gives the minimal DE set.
+1. Revisit Spike-in's which failed.
+1. ?

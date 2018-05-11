@@ -1,0 +1,155 @@
+\documentclass[dvips,12pt]{article}
+
+% Any percent sign marks a comment to the end of the line
+
+% Every latex document starts with a documentclass declaration like this
+% The option dvips allows for graphics, 12pt is the font size, and article
+%   is the style
+
+\usepackage[pdftex]{graphicx}
+\usepackage{url}
+
+% These are additional packages for "pdflatex", graphics, and to include
+% hyperlinks inside a document.
+
+\setlength{\oddsidemargin}{0.25in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{8.5in}
+
+% These force using more of the margins that is the default style
+
+\begin{document}
+
+% Everything after this becomes content
+% Replace the text between curly brackets with your own
+
+\title{miRNA Expression:\\ Normalization Algorithms and Amplification Biases}
+\author{John Steill}
+\date{\today}
+
+% You can leave out "date" and it will be added automatically for today
+% You can change the "\today" date to any text you like
+
+\maketitle
+
+% This command causes the title to be created in the document
+
+\section{Introduction}
+
+% An article style is separated into sections and subsections with 
+%   markup such as this.  Use \section*{Principles} for unnumbered sections.
+Small noncoding RNAs known as microRNA (miRNA) play a crucial role in gene expression regulation. Each miRNA can target many genes, and many genes can be effected by a variety of miRNA\cite{Dong}.  However, there is still no consensus on how expression data should be pre-processed before downstream analysis.\cite{tam} I will survey and evaluate existing normalization methods and attempt to characterize and correct for amplification biases. If I am successful, we will be better able to contrast the regulatory effects of miRNA profiles from different biological conditions. 
+
+\section{Resources}
+I have access to raw fast files for hundreds samples from dozens of sequencing submissions. A data set I am especially interested in is the same sample in nine different combinations of starting amount and amplification cycles.
+In addition, I am able to gather GEO data if needed. I have access to both human and mouse miRNA libraries. Finally, I have access to a suite of multi-core clusters. 
+
+\section{Methods}
+I intend to investigate at least simple cpm normalization, upper percentile normalization\cite{bullard}, and Trimmed Mean of M-values \cite{Robinson} normalization. I hope to
+model amplification bias as a function of miRNA library, starting qty, and number of amplification cycles using Caffe CNNs\cite{Jia}. For
+DE, I will use EBSeq.\cite{Leng}
+
+\section{Anticipated Results}
+
+I expect non-trivial normalization algorithms to be sample-set dependent. Thus the input will be a table of raw counts, and the
+output will be a table of normalized values. I will evaluate the results with DE analysis: I hope to minimize false positives by examining samples which are biological replicates but not technical replicates. 
+
+An ideal result would be a satisfactory normalization method as well as an explanatory CNN. For example, I hypothesize that hairpin structures in the miRNA, caused be nearby reverse palindromic sequences, might inhibit amplification, so these species will be underrepresented with low starting quantities and more amplification cycles. It would be ideal to find a convolutional layer that detected this condition. In addition, I will be looking for more integral patterns, such as CG vs AT content.
+
+%\cite{gonzalez2012}.
+
+%One to two pages should suffice for this part, but use more if you want.  
+%Include figures or images if needed.  Figure~\ref{m42} is an example of  how to
+%do it in \LaTeX.
+%
+%
+%\begin{figure}
+%\begin{center}
+%\resizebox{6in}{!}{\includegraphics*{m42.jpg}}
+%\end{center}
+
+%\caption{The Orion Nebula, M42, recorded with the CDK20N telescope on the night
+%of November 1, 2011. This is a composite of three 100-second photometric images
+%in the Sloan g' (shown as blue), r' (shown as red), and i' (shown as green)
+%bands. The intensities are displayed with logarithmic compression. Click to see
+%the inner regions with square root compression. Highly reddened stars are
+%brighter in the infrared (i') and appear slightly green in these images.
+%\label{m42}}
+%
+%\end{figure}
+
+%
+%\section{Targets}
+%
+%Identify the targets you want to study.  Define their observable characteristics
+%by giving their identifiers (e.g. common name if any, NGC or HD or other catalog
+%entry you can find with AstroCC and Simbad), celestial coordinates, optical
+%magnitudes, and angular size if the object is extended, that is, non-stellar.
+%Please select targets that we have a good likelihood of observing:
+%\begin{itemize}
+%\item Not fainter than magnitude 19 (18 is better)
+%\item Not larger than $0.5^\circ$, but see below
+%\item Above the horizon at either observatory for several hours this fall
+%\end{itemize}
+%
+%A single 100 second exposure with the 0.5 meter telescopes will reach magnitude
+%18 on a clear night.  Accurate quantitative measurements require a little
+%brighter, or longer total accumulated exposures.  The telescopes resolve 1
+%arcsecond in two pixels and have a field of view of $0.6^\circ$.  Larger fields
+%must be mosaics of several exposures. These factors will affect your
+%choices.  
+%
+%For planetary imaging the CDK20's can take exposures as short as 0.01 seconds. 
+%The longest practical single exposure is about 300 seconds, but typically we
+%take 100 second exposures and add them in order to make small guiding
+%corrections between exposures. Use AstroCC with Stellarium to assure that the
+%targets are observable this season.
+%
+%\section{Filters, exposures, and special requests}
+%
+%Assuming that the best telescope for your work is one of the two 0.5 meters
+%(CDK20N at Moore Observatory, CDK20S at Mt. Kent), you will have a choice of
+%filters:  Sloan filter set (g, r, i, or z),  Johnson-Cousins (U, B, V, R, or I),
+%color imaging (B, G, R, or clear), and narrow band (S $[II]$, red continuum,
+%H$\alpha$,  O$[III]$.  Identify which filters are of interest.
+%
+%A typical exposure time for a magnitude 12 star to about half saturation is 100
+%seconds, but it depends on the filter choice.  Based on this, estimate how many
+%exposures you will need, and what total time you require.  In some cases, for
+%example studying an eclipsing or variable star, or an exoplanet transit, you
+%would use only one filter and make many measurements over a night.  In others,
+%you may make only a few exposures in each filter, and try many different
+%filters.   Changing filter sets takes an operator and several minutes, but
+%changing filters within one set (e.g. a different Sloan filter) takes only a few
+%seconds.
+%
+%We have other telescopes that may be available at Moore Observatory this season.
+%There is a wide field astrograph that has a field of view of $4^\circ$ and is a
+%fast $f/4$,  especially good for large nebula, comets, or surveys.  A 14-inch
+%(0.36 meter) Celestron  telescope can be equipped with a fast camera for
+%planetary imaging.  A 27-inch (0.7 meter)  corrected Dall-Kirkham is scheduled
+%to be be delivered to Australia this fall, although we are unsure of the actual
+%date it could see light yet.  
+
+
+ 
+\begin{thebibliography}{99}
+
+\bibitem{tam} Tam, Shirley, Ming-Sound Tsao, and John D. McPherson. "Optimization of miRNA-seq data preprocessing." Briefings in bioinformatics 16.6 (2015): 950-963.
+
+\bibitem{bullard}Bullard, James H., et al. "Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments." BMC bioinformatics 11.1 (2010): 94.
+
+\bibitem{Robinson}Robinson, Mark D., and Alicia Oshlack. "A scaling normalization method for differential expression analysis of RNA-seq data." Genome biology 11.3 (2010): R25.
+
+\bibitem{Leng} Leng, Ning, et al. "EBSeq: an empirical Bayes hierarchical model for inference in RNA-seq experiments." Bioinformatics 29.8 (2013): 1035-1043.
+
+\bibitem{Jia} Jia, Yangqing, et al. "Caffe: Convolutional architecture for fast feature embedding." Proceedings of the 22nd ACM international conference on Multimedia. ACM, 2014.
+
+\bibitem{Dong}Dong, Haifeng, et al. "MicroRNA: function, detection, and bioanalysis." Chemical reviews 113.8 (2013): 6207-6233.
+
+\end{thebibliography}
+
+
+
+\end{document}
