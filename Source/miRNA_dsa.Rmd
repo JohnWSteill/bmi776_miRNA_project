@@ -21,10 +21,11 @@ knitr::opts_chunk$set(fig.pos = 'h')
 library(tufte)
 library(tidyverse)
 library(reshape2)
+library(bcbioRNASeq)
 # invalidate cache when the tufte version changes
 knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
 options(htmltools.dir.version = FALSE)
-setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+setwd("/Users/jsteill/GDrive/PROJS/bmi776/Spring-18/project")
 ```
 
 # Introduction
@@ -50,42 +51,13 @@ However, this data should provide insights into the best normalization method. A
 
 
 get_data <- function(f){
-    
     raw <- read_tsv(f)
-    raw = raw %>% rename(
+    raw = raw %>% dplyr::rename(
         miRNA="#symbol",
-        ng_3_13 = 'Hepg2_with_UO126_reps_1&2_3_13ng',
-        ng_6_25= 'Hepg2_with_UO126_reps_1&2_6_25ng',
-        ng_12_5 = 'Hepg2_with_UO126_reps_1&2_12_5ng',
-        ng_25 = 'Hepg2_with_UO126_reps_1&2_25ng',
-        ng_50 = 'Hepg2_with_UO126_reps_1&2_50ng',
-        ng_100 = 'Hepg2_with_UO126_reps_1&2_100ng',
-        ng_200 = 'Hepg2_with_UO126_reps_1&2_200ng',
-        ng_500 = 'Hepg2_with_UO126_reps_1&2_500ng',
-        cyc_5 = 'Hepg2_with_UO126_reps_1&2_5_cycles',
-        cyc_10 = 'Hepg2_with_UO126_reps_1&2_10_cycles',
-        cyc_15 = 'Hepg2_with_UO126_reps_1&2_15_cycles',
-        cyc_20 = 'Hepg2_with_UO126_reps_1&2_20_cycles',
-        cyc_25 = 'Hepg2_with_UO126_reps_1&2_25_cycles',
-        cyc_30 = 'Hepg2_with_UO126_reps_1&2_30_cycles',
-        dil_1to2 = 'Hepg2_with_UO126_reps_1&2_SI_1to2_dil',
-        dil_1to3_9 = 'Hepg2_with_UO126_reps_1&2_SI_1to3_9_dil',
-        dil_1to7_8 = 'Hepg2_with_UO126_reps_1&2_SI_1to7_8_dil',
-        dil_1to15_6 = 'Hepg2_with_UO126_reps_1&2_SI_1to15_6_dil',
-        dil_1to31_2 = 'Hepg2_with_UO126_reps_1&2_SI_1to31_2_dil',
-        dil_1to62_5 = 'Hepg2_with_UO126_reps_1&2_SI_1to62_5_dil',
-        dil_1to125 = 'Hepg2_with_UO126_reps_1&2_SI_1to125_dil',
-        dil_1to250 = 'Hepg2_with_UO126_reps_1&2_SI_1to250_dil',
-        dil_1to500 = 'Hepg2_with_UO126_reps_1&2_SI_1to500_dil',
-        dil_1to1000 = 'Hepg2_with_UO126_reps_1&2_SI_1to1000_dil'
-    ) %>% select(
-        miRNA, ng_3_13, ng_6_25, ng_12_5, ng_25, ng_50 , ng_100, ng_200,ng_500,
-        cyc_5, cyc_10, cyc_15, cyc_20, cyc_25, cyc_30,
-        dil_1to2, dil_1to3_9, dil_1to7_8, dil_1to15_6, dil_1to31_2, dil_1to62_5,
-        dil_1to125, dil_1to250, dil_1to500, dil_1to1000
-    )
-    raw$rowSum = rowSums(raw[,2:25])
-    raw <- arrange(raw,desc(rowSum))[,1:25]
+        ng_100_gold = 'Hepg2_with_UO126_reps_1&2_100ng')
+    raw = raw[,c(1,2,3,12,4,13,5,14,6,15,7,16,8,17,9,18,10,19,11,20)]
+    raw$rowSum = rowSums(raw[,-1])
+    raw <- arrange(raw,desc(rowSum))[,1:ncol(raw)-1]
 }
 
 
@@ -93,13 +65,24 @@ get_melt <- function(f){
     m = melt(get_data(f)[1:10,])  
 }
 
-
 ```
 
 ```{r fig-raw, fig.width = 10, fig.height = 6, fig.fullwidth = TRUE, fig.cap = "Raw Reads", message = F, warning=FALSE, echo =F, cache=TRUE}
-setwd("/Volumes/home/GUP/Analysis/Sub_0645_miRNA_Norm")
+setwd("/Users/jsteill/GDrive/PROJS/bmi776/Spring-18/project")
 
-ggplot(get_melt("data/miRNA.ec.tab"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1))
+p <- ggplot(get_melt("Data/miRNA.ec.tab"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1)) + labs(y = "Raw counts", x = '')
+
+p2 <- ggplot(get_melt("Data/cpm_norm_sub_670.tsv"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1)) + labs(y = "CPM", x = '')
+
+p3 <- ggplot(get_melt("Data/tam_UQ_sub_670.tsv"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1)) + labs(y = "Tam_UQ", x = '')
+
+raw = get_data("data/miRNA.ec.tab")
+sampleCycle = append(c("C15"),paste("C", rep(c("15","20","30"), each = 2, 3), sep="" ))
+sampleType<- rep("N", ncol(dgList))
+sampleType[grep("gold", colnames(dgList))] <- "G"
+sampleType[grep("3", colnames(dgList))] <- "3"
+sampleType[grep("6", colnames(dgList))] <- "6"
+sampleType[grep("10", colnames(dgList))] <- "10"
 ```
 
 We see some trends: 
