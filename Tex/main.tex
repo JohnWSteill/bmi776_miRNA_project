@@ -69,17 +69,16 @@ Table \ref{tab:1} gives the coefficients of the linear model for the top express
 
 \section{Discussion}
 
+In Figure \ref{fig:1}, we can see that even with the maximum number of 30 pcr cycles, the total number of reads was less than the gold standard case. This is important because as it appears there still was some room to grow, and the concentrations were not saturated. So it's likely that all libraries were being amplified, but at different rates. Although we will see this more clearly subsequently, note the differing trajectories of hsa-let-7f-5p (solid orange) and hsa-miR-151a-3p (dashed green), at the bottom of the page. For all initial starting conditions, the concentrations are on par for 15 cycles, but the former consistently outstrips the latter as the number of cycles increases. \vspace{4pt} \\
+This same behavior can be seen more clearly in other miRNAs in Figure \ref{fig:2}. hsa-miR-26a-5p, hsa-miR-30d-5p, and the hsa-miR-146* family all consistently gain a greater share of the total reads as the number of cycles increase. To investigate what  these varieties have in common, I first examined their relative CG content, and then the folding prediction from Mfold webserver \citep{Zuker03}. Neither showed an obvious correlation.  \vspace{4pt} \\
+Even the "flat" species are interesting, because although like the gold standard they are the most highly expressed, they are a very different proportion. There is a possibility of batch effects, as the gold standard sample was run on a different flowcell. A final insight from Figure \ref{fig:2} is that there is no single normalization strategy that will not have one of the top two libraries being viewed as differentially expressed; there is a fold change of about 3 that must be divided among the two.  \vspace{4pt} \\
+Figure \ref{fig:3} appears to attempt to do this, with both miRNAs falling. Recall the normalization constant was the $75^{\text{th}}$ percentile of the miRNAs with a count above 5, or about rank 125. Even though this is still far away from the top 10, qualitatively we see much of the signal which was responding to the cycle number has been muted. This qualitative observation matches the conclusion from edgeR, which minimized false positives with this normalization. \vspace{4pt} \\
+The values in Table \ref{tab:1} correspond to this normalization. Much of this table is merely restating what we've already observed visually, the larger coefficients for C20 and C30 correspond to miRNAs we've already examined as up-regulated in Table \ref{tab:2}. \vspace{4pt} \\
+Figure \ref{fig:4} looks very similar to Figure \ref{fig:1}, the raw counts. Upon reflection, this must be because the normalization is very close to one. Just as \citep{Tam15} needed to tweak the traditional UQ normalization to account for the many unexpressed libraries, it is evident that a similar step needs to be taken to put TMM on even footing, and edgeR's default algorithm should be re-implemented. 
 
+In conclusion, an upper percentile normalization is the optimal choice, although the optimal percentile is an open question.
+Because I didn't have samples which should show differentially expressed miRNA, I avoided attempting to find this. Future work should attempt to balance this with some samples which are known to have some DE miRNA. 
 
-
-
-
-
-\begin{equation}
-\sum \text{\it x}+ \text{\it y} =\text{\it Z}\label{eq:01}\vspace*{-10pt}
-\end{equation}
-Figure~2\vphantom{\ref{fig:02}} shows that the above method  Text
-Text Text Text  Text Text Text Text Text Text  Text Text.
 
 
 
@@ -88,7 +87,7 @@ Text Text Text  Text Text Text Text Text Text  Text Text.
 \bibitem[Conesa {\it et~al}, 2016]{Conesa16}
 Conesa, A., Madrigal, P., Tarazona, S., Gomez-Cabrero, D., Cervera, A., McPherson, A., ... \& Mortazavi, A. (2016). A survey of best practices for RNA-seq data analysis. Genome biology, 17(1), 13.
 
-\bibitem[Xu {\it et~al}, 2010]{Xu10}Xu, H., He, J. H., Xiao, Z. D., Zhang, Q. Q., Chen, Y. Q., Zhou, H., \& Qu, L. H. (2010). Liver?enriched transcription factors regulate microRNA?122 that targets CUTL1 during liver development. Hepatology, 52(4), 1431-1442.
+\bibitem[Xu {\it et~al}, 2010]{Xu10}Xu, H., He, J. H., Xiao, Z. D., Zhang, Q. Q., Chen, Y. Q., Zhou, H., \& Qu, L. H. (2010). Liver-enriched transcription factors regulate microRNA-122 that targets CUTL1 during liver development. Hepatology, 52(4), 1431-1442.
 
 \bibitem[Tam {\it et~al}, 2015]{Tam15} Tam, S., Tsao, M. S., \& McPherson, J. D. (2015). Optimization of miRNA-seq data preprocessing. Briefings in bioinformatics, 16(6), 950-963.
 
@@ -98,33 +97,8 @@ Conesa, A., Madrigal, P., Tarazona, S., Gomez-Cabrero, D., Cervera, A., McPherso
 
 \bibitem[Rueda  {\it et~al}, 2015]{Rueda15}Oscar Rueda \& Bernard Pereira (2015, July 15). Differential Expression Analysis using edgeR. Retrieved from https://bioinformatics-core-shared-training.github.io/cruk-bioinf-sschool/Day3/rnaSeq\_DE.pdf
 
-\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03}
-Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
+\bibitem[Zuker  {\it et~al}, 2003]{Zuker03}Zuker, M. (2003). Mfold web server for nucleic acid folding and hybridization prediction. Nucleic acids research, 31(13), 3406-3415.
 
-\bibitem[Bag {\it et~al}., 2001]{Bag01}
-Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
-
-\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
-Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
-in nigral dopaminergic neurnol cell: correlation with the known
-pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
-Res.}, \textbf{110}(Suppl. 1), 76--84.
-
-\bibitem[Crenshaw and Jones, 2003]{Cre03}
-Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
-cancer management: one tumor, one chip. \textit{Bioinformatics},
-doi:10.1093/bioinformatics/btn000.
-
-\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
-Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
-(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
-???--???.
-
-\bibitem[Bardet, 1920]{Bar20}
-Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
-polydactylie et retinite pigmentaire (contribution a l'etude des
-formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
-institution, Paris, France.
 
 \end{thebibliography}
 
@@ -181,6 +155,25 @@ institution, Paris, France.
    \hline
 \end{tabular}
 \end{table}
+
+\begin{table}[ht]
+\caption {miRNA features} \label{tab:2}
+\centering
+\begin{tabular}{lccrc}
+  \hline
+ miRNA &  Up or Down Regulated & Sequence & CG frac & Mfold Prediction  \\ 
+  \hline
+  hsa-let-7g-5p,hsa-let-7i-5p & UP & ugagguaguaguuuguacaguu & 0.36 & Linear \\
+  hsa-miR-26a-5p   & UP & uucaaguaauccaggauaggcu & 0.41 & Linear \\
+  hsa-miR-30d-5p   & UP & uguaaacauccccgacuggaag & 0.50  & Linear\\
+  hsa-miR-146        & UP &  ugagaacugaauuccauggguu & 0.41  & Linear\\
+  hsa-miR-151a-3p & DOWN & cuagacugaagcuccuugagg & 0.52  & Linear\\
+  hsa-miR-192-5p & DOWN & cugaccuaugaauugacagcc & 0.48  & Linear\\
+ \hline
+\end{tabular}
+\end{table}
+
+
 
 \end{document}
 %
