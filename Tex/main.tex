@@ -40,35 +40,16 @@ The samples were prepped with a custom ligation mediated protocol, pooled and se
 A custom algorithm was developed for mapping reads to families of miRNAs. A family was defined as a group of miRNA that shares the first 15 bases. This is because the larger investigation is centered around the production/inhibition of Albumin and Alpha-Fetoprotein (AFP). The binding sites are small, on the order of 5-8 bases, and we would like to track these populations together. The hsa-mir library was thus reduced: miRNAs which shared the first 15 bases were combined and given a comma-separated name of their constituents.  Alignment was done by creating a hash table with 15-mers as keys, and counts as values.
 Figure~1 \vphantom{\ref{fig:1}} shows the ten most prevalent. \\
 
-\begin{figure}[!tpb]
-\centerline{\includegraphics[scale=0.5]{fig-1-raw.eps}}
-\caption{Expected Counts of miRNA groups}\label{fig:1}
-\end{figure}
-
 \vspace{4pt} 
   
 \subsection{Normalization Algorithms}
 \subsubsection{CPM}
 The simplest normalization, shown in Figure \ref{fig:2}, is counts per million (CPM), in which counts are divided by the total number of reads and multiplied by $10^6$. \\
-\begin{figure}[!tpb]
-\centerline{\includegraphics[scale=0.5]{Fig-2-cpm.eps}}
-\caption{CPM Normalization}\label{fig:2}
-\end{figure} 
 
 \subsubsection{Tam Upper Quartile}
 As mentioned previously, traditional upper quartile normalization from RNA-Seq studies is hampered by the relatively large number of low expressed libraries. Even if we restrict ourselves to non-zero values, the $75^{\text{th}}$ percentile would give expected counts in the low single digits.  \citep{Tam15} addressed this by a two-step filter: first we limit the set of miRNAs to those with an expected count of 5 or greater, and then take the $75^{\text{th}}$ percentile of the miRNAs remaining. In practice, this is equivalent to using a 95\% percentile normalization. Again for the top expressers, this is shown in Figure \ref{fig:3}.
-
-\begin{figure}[!tpb]
-\centerline{\includegraphics[scale=0.5]{fig-3-tamuq.eps}}
-\caption{CPM Normalization}\label{fig:3}
-\end{figure} 
-
 \subsubsection{TMM}
 Finally, we will examine the TMM algorithm, as implemented in edgeR \citep{McCarthy12}  package. This method, introduced by \citep{Robinson10} first estimates a dispersion, and then finds a mean after discarding a fraction of the top and bottom of the data. This normalization is shown in Figure \ref{fig:4}.
-\begin{figure}[!tpb]
-\centerline{\includegraphics[scale=0.5]{fig-4-tmm.eps}}
-\caption{CPM Normalization}\label{fig:4}
-\end{figure} 
 \subsection{Finding Bias Candidates with a Generalized Linear Model}
 To build a generalized linear model, we use the number of cycles and the starting amounts as design variables. Thus there are three levels to the cycle variable: 15, 20, and 30 cycles. There are four starting amounts: 3ng, 6ng, 13ng, and 100ng. 
 our model is therefore: \\
@@ -79,53 +60,20 @@ The edgeR package also supports a general linear model. I largely followed the t
 \end{methods}
 
 \section{Results}
-\subsection{Normalization comparison}
-\subsection{GLM top tags}
+\subsection{Normalization Comparison}
+The Tam UQ normalization was superior, as it the fewest false positives, 46, using edgeR's default settings. The TMM and CPM algorithms both gave 77 false positives. (There were approximately 400 miRNAs which were expressed at >1 CPM.) 
+
+\subsection{GLM characterization of amplification bias}
+Table \ref{tab:1} gives the coefficients of the linear model for the top expressers. Values are expressed in base log2.
+
 
 \section{Discussion}
 
-\section{Figures and Tables}
 
 
 
-%
-%\begin{table}[!t]
-%\processtable{This is table caption\label{Tab:01}} {\begin{tabular}{@{}llll@{}}\toprule head1 &
-%head2 & head3 & head4\\\midrule
-%row1 & row1 & row1 & row1\\
-%row2 & row2 & row2 & row2\\
-%row3 & row3 & row3 & row3\\
-%row4 & row4 & row4 & row4\\\botrule
-%\end{tabular}}{This is a footnote}
-%\end{table}
 
 
-%
-%\begin{figure}[!tpb]%figure1
-%\fboxsep=0pt\colorbox{gray}{\begin{minipage}[t]{235pt} \vbox to 100pt{\vfill\hbox to
-%235pt{\hfill\fontsize{24pt}{24pt}\selectfont FPO\hfill}\vfill}
-%\end{minipage}}
-%%\centerline{\includegraphics{fig01.eps}}
-%\caption{Caption, caption.}\label{fig:01}
-%\end{figure}
-
-%\begin{figure}[!tpb]%figure2
-%%\centerline{\includegraphics{fig02.eps}}
-%\caption{Caption, caption.}\label{fig:02}
-%\end{figure}
-
-%\enlargethispage{12pt}
-%\enlargethispage{6pt}
-
-%\bibliographystyle{natbib}
-%\bibliographystyle{achemnat}
-%\bibliographystyle{plainnat}
-%\bibliographystyle{abbrv}
-%\bibliographystyle{bioinformatics}
-%
-%\bibliographystyle{plain}
-%
-%\bibliography{Document}
 
 \begin{equation}
 \sum \text{\it x}+ \text{\it y} =\text{\it Z}\label{eq:01}\vspace*{-10pt}
@@ -179,4 +127,97 @@ formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
 institution, Paris, France.
 
 \end{thebibliography}
+
+
+\section{Figures and Tables}
+\onecolumn
+
+
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.7]{fig-1-raw.eps}}
+\caption{Expected Counts of miRNA groups}\label{fig:1}
+\end{figure}
+
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.7]{Fig-2-cpm.eps}}
+\caption{CPM Normalization}\label{fig:2}
+\end{figure} 
+
+
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.7]{fig-3-tamuq.eps}}
+\caption{CPM Normalization}\label{fig:3}
+\end{figure} 
+
+
+
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.7]{fig-4-tmm.eps}}
+\caption{TMM Normalization}\label{fig:4}
+\end{figure} 
+
+
+
+
+\begin{table}[ht]
+\caption {Linear Model Coefficients} \label{tab:1}
+\centering
+\begin{tabular}{rlrrrrrr}
+  \hline
+ & miRNA & (Intercept) & sampleType10 & sampleType3 & sampleType6 & sampleCycleC20 & sampleCycleC30 \\ 
+  \hline
+1 & hsa-miR-21-5p & -0.47 & -0.41 & -0.59 & -0.42 & 0.05 & -0.03 \\ 
+  2 & hsa-miR-148a-3p & -0.34 & -1.63 & -1.80 & -1.64 & 0.27 & 0.27 \\ 
+  3 & hsa-miR-192-5p & -2.12 & -0.85 & -1.00 & -0.85 & 0.15 & 0.15 \\ 
+  4 & hsa-miR-26a-5p & -3.81 & 0.37 & 0.26 & 0.39 & 0.18 & 0.35 \\ 
+  5 & hsa-miR-92a-3p & -3.76 & 0.05 & 0.09 & 0.12 & 0.18 & 0.12 \\ 
+  6 & hsa-miR-30d-5p & -3.84 & 0.02 & -0.06 & 0.04 & 0.12 & 0.18 \\ 
+  7 & hsa-miR-27a-3p,hsa-miR-27b-3p & -3.64 & -0.19 & -0.34 & -0.20 & 0.03 & 0.05 \\ 
+  8 & hsa-miR-146a-5p,hsa-miR-146b-5p & -3.61 & -0.43 & -0.53 & -0.41 & 0.14 & 0.23 \\ 
+  9 & hsa-miR-151a-3p & -2.82 & -1.44 & -1.59 & -1.47 & 0.06 & -0.07 \\ 
+  10 & hsa-let-7f-5p & -4.01 & -0.45 & -0.41 & -0.34 & 0.19 & 0.28 \\ 
+  11 & hsa-let-7g-5p,hsa-let-7i-5p & -3.78 & -0.64 & -0.84 & -0.65 & 0.20 & 0.16 \\ 
+  12 & hsa-let-7a-5p,hsa-let-7b-5p,hsa-let-7c-5p & -4.70 & 0.23 & 0.43 & 0.39 & 0.21 & 0.20 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
 \end{document}
+%
+%\begin{table}[!t]
+%\processtable{This is table caption\label{Tab:01}} {\begin{tabular}{@{}llll@{}}\toprule head1 &
+%head2 & head3 & head4\\\midrule
+%row1 & row1 & row1 & row1\\
+%row2 & row2 & row2 & row2\\
+%row3 & row3 & row3 & row3\\
+%row4 & row4 & row4 & row4\\\botrule
+%\end{tabular}}{This is a footnote}
+%\end{table}
+
+
+%
+%\begin{figure}[!tpb]%figure1
+%\fboxsep=0pt\colorbox{gray}{\begin{minipage}[t]{235pt} \vbox to 100pt{\vfill\hbox to
+%235pt{\hfill\fontsize{24pt}{24pt}\selectfont FPO\hfill}\vfill}
+%\end{minipage}}
+%%\centerline{\includegraphics{fig01.eps}}
+%\caption{Caption, caption.}\label{fig:01}
+%\end{figure}
+
+%\begin{figure}[!tpb]%figure2
+%%\centerline{\includegraphics{fig02.eps}}
+%\caption{Caption, caption.}\label{fig:02}
+%\end{figure}
+
+%\enlargethispage{12pt}
+%\enlargethispage{6pt}
+
+%\bibliographystyle{natbib}
+%\bibliographystyle{achemnat}
+%\bibliographystyle{plainnat}
+%\bibliographystyle{abbrv}
+%\bibliographystyle{bioinformatics}
+%
+%\bibliographystyle{plain}
+%
+%\bibliography{Document}
