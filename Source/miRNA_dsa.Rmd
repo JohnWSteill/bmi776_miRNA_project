@@ -76,13 +76,33 @@ p2 <- ggplot(get_melt("Data/cpm_norm_sub_670.tsv"), aes(x=variable, y=value, gro
 
 p3 <- ggplot(get_melt("Data/tam_UQ_sub_670.tsv"), aes(x=variable, y=value, group=miRNA, color=miRNA))+ geom_line(aes(linetype=miRNA)) + coord_trans(y = "log10") + theme(axis.text.x=element_text(angle=45, hjust=1)) + labs(y = "Tam_UQ", x = '')
 
-raw = get_data("data/miRNA.ec.tab")
+raw = get_data("Data/miRNA.ec.tab")
+## Following taken from Differential Expression Analysis using edgeR - 
+## https://bioinformatics-core-shared-training.github.io/cruk-bioinf-sschool/Day3/rnaSeq_DE.pdf
+dgList <- DGEList(counts=raw[,-1], genes=raw[,1])
+keep <- which(rowSums(countCheck) >= 2)
+dgList <- dgList[keep,]
+dgList <- calcNormFactors(dgList, method="upperquartile")
 sampleCycle = append(c("C15"),paste("C", rep(c("15","20","30"), each = 2, 3), sep="" ))
 sampleType<- rep("N", ncol(dgList))
 sampleType[grep("gold", colnames(dgList))] <- "G"
 sampleType[grep("3", colnames(dgList))] <- "3"
 sampleType[grep("6", colnames(dgList))] <- "6"
 sampleType[grep("10", colnames(dgList))] <- "10"
+designMat <- model.matrix(~sampleType + sampleCycle)
+estimateGLMCommonDisp(dgList, design=designMat)
+dgList <- estimateGLMCommonDisp(dgList, design=designMat)
+dgList <- estimateGLMTrendedDisp(dgList, design=designMat)
+dgList <- estimateGLMTagwiseDisp(dgList, design=designMat)
+plotBCV(dgList)
+fit <- glmFit(dgList, designMat)
+lrt <- fit(fit, coef=4)
+edgeR_result <- topTags(lrt)
+edgeR_result
+deGenes <- decideTestsDGE(lrt, p=0.001)
+deGenes <- rownames(lrt)[as.logical(deGenes)]
+plotSmear(lrt, de.tags=deGenes)
+abline(h=c(-1, 1), col=2)
 ```
 
 We see some trends: 

@@ -18,51 +18,69 @@
 
 \editor{}
 
-\abstract{\textbf{Motivation:} Small noncoding RNAs known as microRNA (miRNA) play a crucial role in gene expression regulation. Each miRNA can target many genes, and many genes can be affected by a variety of miRNA[6]. However, there is still no consensus on how expression data should be pre-processed before downstream analysis. I will survey and evaluate existing normalization methods and attempt to characterize and correct for amplification biases. If I am successful, we will be better able to contrast the regulatory effects of miRNA profiles from different biological conditions.\\
-\textbf{Results:} Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text
-Text Text Text Text Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text\\
-\textbf{Availability:} Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text
-Text Text Text Text Text Text Text Text Text Text Text Text Text Text  Text\\
+\abstract{\textbf{Motivation:} Small noncoding RNAs known as microRNA (miRNA) play a crucial role in gene expression regulation. Each miRNA can target many genes, and many genes can be affected by a variety of miRNA. However, there is still no consensus on how expression data should be pre-processed before downstream analysis. This work surveys and evaluates existing normalization methods and characterizes amplification biases. By sequencing samples which are biological replicates but different technical preparations, we seek to minimize the false positives in differentially expressed miRNA librariesfrom technical replicates\\
+\textbf{Results:} .\\
+\textbf{Availability:} https://github.com/JohnWSteill/bmi776\_miRNA\_project.git \\
 \textbf{Contact:} \href{jsteill@morgridge.org}{jsteill@morgridge.org}\\
-\textbf{Supplementary information:} Supplementary data are available at \textit{Bioinformatics}
-online.}
+\textbf{Supplementary information:} Supplementary data available upon request.}
 
 \maketitle
 
 \section{Introduction}
-\begin{itemize}
-\item Motivate Problem
-\item Context and Relevant work
-\item State Hypothesis
-\end{itemize}
-Text Text Text Text Text Text  Text Text Text Text Text Text Text
-Text Text  Text Text Text Text Text Text. Figure~\ref{fig:01}
-shows that the above method  Text Text Text Text  Text Text Text
-Text Text Text  Text Text.  \citep{Bag01} wants to know about
-{\ldots}{\ldots} text follows.
-
-
-%\enlargethispage{12pt}
-
-
+The problem of comparing RNA-Seq expression levels among disparate samples has been extensively explored.  \citep{Conesa16} Many successful methods are motivated by first making assumptions about what the researcher roughly expects and working backwards. For example, if the highest expressers are considered housekeeping genes and are not of interest in the experiment, it would make sense to use an upper quartile (or higher) normalization. On the other hand, if the highest expressed genes are expected to vary, the effects of relative abundance will be marked, and it would be appropriate to use a median-by-ratio normalization method. Without any such knowledge, we may choose to use simple TPM for a first exploratory pass. \vspace{4pt} \\ 
+miRNA normalization is especially challenging. There are fewer varieties, and we may see many fewer libraries being simultaneously expressed. We also may be comparing samples in which the number expressed vary greatly (as well as expression magnitudes.) Finally, technically we often struggle to get enough biological material and forces to use smaller amounts and more amplification cycles than desired, which introduces another source of bias.  \vspace{4pt} \\
+For this study, an ideal normalization is one which produces no differentially expressed libraries, because they are all biological replicates. My hypothesis is we see the fewest false positive DE miRNAs from a very high quantile normalization. This may distort lower-expressed miRNAs, but this will be mitigated because it requires a higher fold change to trigger a differentially expressed threshold with fewer raw counts. If the highest expresser shows significant amplification bias, this hypothesis may be proved incorrect. \\
 
 \begin{methods}
 \section{Methods}
+\subsection{Sample Acquisition}
+The samples were motivated from an experiment studying fetal mouse liver development. This study is challenging because few miRNAs are expressed so early and the levels are changing rapidly, which makes normalization non-trivial. In addition, because embryonic mouse livers are on the order of 10 microns, getting enough tissue is difficult, necessitating more amplification.\citep{Xu10}  However, for cost and convenience, a human hepatocyte-like culture induced from a pluripotent cell line was used. The sample was partitioned into 6 samples of amounts of 3.25 ng, 6 of 6.5 ng, 6 of 12.5, and one of 100ng. The 100ng will be taken as a gold standard. Each batch of six was divided into 3 sets of two replicates, which underwent 15, 20, and 30 cycles of PCR amplification.\vspace{4pt} \\  
+The samples were prepped with a custom ligation mediated protocol, pooled and sequenced on an Illumina Hi-Seq 3000.  The samples were demultiplexed with Illumina's bcl2fastq 2.17 software to generate fastq files. 
+\subsection{Calculation of Expected Counts}
+A custom algorithm was developed for mapping reads to families of miRNAs. A family was defined as a group of miRNA that shares the first 15 bases. This is because the larger investigation is centered around the production/inhibition of Albumin and Alpha-Fetoprotein (AFP). The binding sites are small, on the order of 5-8 bases, and we would like to track these populations together. The hsa-mir library was thus reduced: miRNAs which shared the first 15 bases were combined and given a comma-separated name of their constituents.  Alignment was done by creating a hash table with 15-mers as keys, and counts as values.
+Figure~1 \vphantom{\ref{fig:1}} shows the ten most prevalent. \\
 
-\begin{itemize}
-\item Describe Approach and Data analysis
-\item Data
-\item 3rd Party Algorithms
-\item Developed Algorithms
-\end{itemize}
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.5]{fig-1-raw.eps}}
+\caption{Expected Counts of miRNA groups}\label{fig:1}
+\end{figure}
 
-\subsection{This is subheading}
-\subsubsection{This is subsubheading}
-\enlargethispage{6pt}
+\vspace{4pt} 
+  
+\subsection{Normalization Algorithms}
+\subsubsection{CPM}
+The simplest normalization, shown in Figure \ref{fig:2}, is counts per million (CPM), in which counts are divided by the total number of reads and multiplied by $10^6$. \\
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.5]{Fig-2-cpm.eps}}
+\caption{CPM Normalization}\label{fig:2}
+\end{figure} 
 
+\subsubsection{Tam Upper Quartile}
+As mentioned previously, traditional upper quartile normalization from RNA-Seq studies is hampered by the relatively large number of low expressed libraries. Even if we restrict ourselves to non-zero values, the $75^{\text{th}}$ percentile would give expected counts in the low single digits.  \citep{Tam15} addressed this by a two-step filter: first we limit the set of miRNAs to those with an expected count of 5 or greater, and then take the $75^{\text{th}}$ percentile of the miRNAs remaining. In practice, this is equivalent to using a 95\% percentile normalization. Again for the top expressers, this is shown in Figure \ref{fig:3}.
+
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.5]{fig-3-tamuq.eps}}
+\caption{CPM Normalization}\label{fig:3}
+\end{figure} 
+
+\subsubsection{TMM}
+Finally, we will examine the TMM algorithm, as implemented in edgeR \citep{McCarthy12}  package. This method, introduced by \citep{Robinson10} first estimates a dispersion, and then finds a mean after discarding a fraction of the top and bottom of the data. This normalization is shown in Figure \ref{fig:4}.
+\begin{figure}[!tpb]
+\centerline{\includegraphics[scale=0.5]{fig-4-tmm.eps}}
+\caption{CPM Normalization}\label{fig:4}
+\end{figure} 
+\subsection{Finding Bias Candidates with a Generalized Linear Model}
+To build a generalized linear model, we use the number of cycles and the starting amounts as design variables. Thus there are three levels to the cycle variable: 15, 20, and 30 cycles. There are four starting amounts: 3ng, 6ng, 13ng, and 100ng. 
+our model is therefore: \\
+\begin{equation}
+M = \text{\textasciitilde}\text{\it{Amt}}+\text{\it{Ncycles}}\label{eq:01}
+\end{equation}
+The edgeR package also supports a general linear model. I largely followed the tutorial from \citep{Rueda15}.
 \end{methods}
 
 \section{Results}
+\subsection{Normalization comparison}
+\subsection{GLM top tags}
 
 \section{Discussion}
 
@@ -70,34 +88,34 @@ Text Text Text  Text Text.  \citep{Bag01} wants to know about
 
 
 
+%
+%\begin{table}[!t]
+%\processtable{This is table caption\label{Tab:01}} {\begin{tabular}{@{}llll@{}}\toprule head1 &
+%head2 & head3 & head4\\\midrule
+%row1 & row1 & row1 & row1\\
+%row2 & row2 & row2 & row2\\
+%row3 & row3 & row3 & row3\\
+%row4 & row4 & row4 & row4\\\botrule
+%\end{tabular}}{This is a footnote}
+%\end{table}
 
-\begin{table}[!t]
-\processtable{This is table caption\label{Tab:01}} {\begin{tabular}{@{}llll@{}}\toprule head1 &
-head2 & head3 & head4\\\midrule
-row1 & row1 & row1 & row1\\
-row2 & row2 & row2 & row2\\
-row3 & row3 & row3 & row3\\
-row4 & row4 & row4 & row4\\\botrule
-\end{tabular}}{This is a footnote}
-\end{table}
 
-
-
-\begin{figure}[!tpb]%figure1
-\fboxsep=0pt\colorbox{gray}{\begin{minipage}[t]{235pt} \vbox to 100pt{\vfill\hbox to
-235pt{\hfill\fontsize{24pt}{24pt}\selectfont FPO\hfill}\vfill}
-\end{minipage}}
-%\centerline{\includegraphics{fig01.eps}}
-\caption{Caption, caption.}\label{fig:01}
-\end{figure}
+%
+%\begin{figure}[!tpb]%figure1
+%\fboxsep=0pt\colorbox{gray}{\begin{minipage}[t]{235pt} \vbox to 100pt{\vfill\hbox to
+%235pt{\hfill\fontsize{24pt}{24pt}\selectfont FPO\hfill}\vfill}
+%\end{minipage}}
+%%\centerline{\includegraphics{fig01.eps}}
+%\caption{Caption, caption.}\label{fig:01}
+%\end{figure}
 
 %\begin{figure}[!tpb]%figure2
 %%\centerline{\includegraphics{fig02.eps}}
 %\caption{Caption, caption.}\label{fig:02}
 %\end{figure}
 
-
-
+%\enlargethispage{12pt}
+%\enlargethispage{6pt}
 
 %\bibliographystyle{natbib}
 %\bibliographystyle{achemnat}
@@ -119,6 +137,19 @@ Text Text Text  Text Text Text Text Text Text  Text Text.
 
 \begin{thebibliography}{}
 
+\bibitem[Conesa {\it et~al}, 2016]{Conesa16}
+Conesa, A., Madrigal, P., Tarazona, S., Gomez-Cabrero, D., Cervera, A., McPherson, A., ... \& Mortazavi, A. (2016). A survey of best practices for RNA-seq data analysis. Genome biology, 17(1), 13.
+
+\bibitem[Xu {\it et~al}, 2010]{Xu10}Xu, H., He, J. H., Xiao, Z. D., Zhang, Q. Q., Chen, Y. Q., Zhou, H., \& Qu, L. H. (2010). Liver?enriched transcription factors regulate microRNA?122 that targets CUTL1 during liver development. Hepatology, 52(4), 1431-1442.
+
+\bibitem[Tam {\it et~al}, 2015]{Tam15} Tam, S., Tsao, M. S., \& McPherson, J. D. (2015). Optimization of miRNA-seq data preprocessing. Briefings in bioinformatics, 16(6), 950-963.
+
+\bibitem[Robinson {\it et~al}, 2010]{Robinson10}Robinson, M. D., \& Oshlack, A. (2010). A scaling normalization method for differential expression analysis of RNA-seq data. Genome biology, 11(3), R25.
+
+\bibitem[McCarthy {\it et~al}, 2012]{McCarthy12}McCarthy DJ, Chen Y \& Smyth GK (2012). Differential expression analysis of multifactor RNA-Seq experiments with respect to biological variation. Nucleic Acids Research 40, 4288-4297
+
+\bibitem[Rueda  {\it et~al}, 2015]{Rueda15}Oscar Rueda \& Bernard Pereira (2015, July 15). Differential Expression Analysis using edgeR. Retrieved from https://bioinformatics-core-shared-training.github.io/cruk-bioinf-sschool/Day3/rnaSeq\_DE.pdf
+
 \bibitem[Bofelli {\it et~al}., 2000]{Boffelli03}
 Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
 
@@ -130,9 +161,6 @@ Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
 in nigral dopaminergic neurnol cell: correlation with the known
 pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
 Res.}, \textbf{110}(Suppl. 1), 76--84.
-
-\bibitem[Lehmann, 1986]{Leh86}
-Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
 
 \bibitem[Crenshaw and Jones, 2003]{Cre03}
 Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
